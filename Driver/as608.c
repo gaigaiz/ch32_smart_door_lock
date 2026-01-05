@@ -1,0 +1,49 @@
+#include "debug.h"
+#include "as608.h"
+#include "uart.h"
+
+void as608_init()
+{
+    Uart7_Init();
+}
+/*AS608引脚初始化*/
+void As608_GPIO_Init()
+{
+    GPIO_InitTypeDef  GPIO_InitStructure;
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+}
+void PS_GetImage()//探测手指，探测到后录入指纹图像存于 ImageBuffer。返回确认
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x01,0x00,0x05};
+    uart7_send_string(string, 12);
+}
+void PS_GenCha(u8 BufferID)//将 ImageBuffer 中的原始图像生成指纹特征文件存于 CharBuffer1 或 CharBuffer2
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x04,0x02,BufferID,0x00,0x01+0x00+0x04+0x02+BufferID};
+    uart7_send_string(string, 13);
+}
+void PS_RegModel()//： 将 CharBuffer1 与 CharBuffer2 中的特征文件合并生成模板，结果存于 CharBuffer1 与 CharBuffer2。
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x05,0x00,0x09};
+    uart7_send_string(string, 12);
+}
+void PS_StoreChar(u8 addr)//将 CharBuffer1 或 CharBuffer2 中的模板文件存到 PageID 号flash 数据库位置。
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x06,0x06,0x02,0x00,addr,0x00,0x01+0x00+0x06+0x06+0x02+0x00+addr};
+    uart7_send_string(string, 15);
+}
+void PS_Search()//功能说明： 以 CharBuffer1 或 CharBuffer2 中的特征文件搜索整个或部分指纹库。若搜索到，则返回页码。
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x04,0x02,0x00,0x00,0x00,0xFF,0x01,0x0E};
+    uart7_send_string(string, 17);
+}
+void PS_Empty()//功能说明： 删除 flash 数据库中所有指纹模板
+{
+    u8 string[]={0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x0d,0x00,0x11};
+    uart7_send_string(string, 12);
+}

@@ -1,0 +1,10 @@
+# Build outputs
+Debug/
+obj/
+
+# IDE specific files
+.settings/
+*.launch
+
+# Spec workflow (project management files)
+.spec-workflow/
